@@ -46,6 +46,8 @@
 Config * control;
 MachineType machine;
 SVGACards svgaCard;
+Bit8u cga_comp;
+bool new_cga;
 
 /* The whole load of startups for all the subfunctions */
 void MSG_Init(Section_prop *);
@@ -360,6 +362,8 @@ static void DOSBOX_RealInit(Section * sec) {
 	}
 
 	std::string mtype(section->Get_string("machine"));
+	std::string comptype(section->Get_string("composite"));
+	std::string cgatype(section->Get_string("cgatype"));
 	svgaCard = SVGA_None;
 	machine = MCH_VGA;
 	int10.vesa_nolfb = false;
@@ -379,6 +383,17 @@ static void DOSBOX_RealInit(Section * sec) {
 	else if (mtype == "svga_paradise") { svgaCard = SVGA_ParadisePVGA1A; }
 	else if (mtype == "vgaonly")      { svgaCard = SVGA_None; }
 	else E_Exit("DOSBOX:Unknown machine type %s",mtype.c_str());
+
+	cga_comp = 0;
+	if      (comptype == "auto") { cga_comp = 0; }
+        else if (comptype == "on")   { cga_comp = 1; }
+	else if (comptype == "off")  { cga_comp = 2; }
+	else E_Exit("DOSBOX:Unknown composite type %s",comptype.c_str());
+
+	new_cga = 0;
+	if      (cgatype == "old") { new_cga = 0; }
+        else if (cgatype == "new") { new_cga = 1; }
+	else E_Exit("DOSBOX:Unknown cga type %s",cgatype.c_str());
 }
 
 
@@ -410,6 +425,13 @@ void DOSBOX_Init(void) {
 		"hercules", "cga", "tandy", "pcjr", "ega",
 		"vgaonly", "svga_s3", "svga_et3000", "svga_et4000",
 		"svga_paradise", "vesa_nolfb", "vesa_oldvbe", 0 };
+
+	const char* composites[] = {
+		"auto", "on", "off", 0 };
+
+	const char* cgatypes[] = {
+		"old", "new", 0 };
+
 	secprop=control->AddSection_prop("dosbox",&DOSBOX_RealInit);
 	Pstring = secprop->Add_path("language",Property::Changeable::Always,"");
 	Pstring->Set_help("Select another language file.");
@@ -420,6 +442,14 @@ void DOSBOX_Init(void) {
 
 	Pstring = secprop->Add_path("captures",Property::Changeable::Always,"capture");
 	Pstring->Set_help("Directory where things like wave, midi, screenshot get captured.");
+
+	Pstring = secprop->Add_string("composite",Property::Changeable::OnlyAtStart,"off");
+	Pstring->Set_values(composites);
+	Pstring->Set_help("Whether or not CGA composite is turned on, or off, by default.");
+
+	Pstring = secprop->Add_string("cgatype",Property::Changeable::OnlyAtStart,"old");
+	Pstring->Set_values(cgatypes);
+	Pstring->Set_help("Old or new CGA.");
 
 #if C_DEBUG
 	LOG_StartUp();

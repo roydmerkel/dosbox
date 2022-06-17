@@ -176,8 +176,8 @@ static void write_lightpen(Bitu port,Bitu /*val*/,Bitu) {
 }
 
 static double hue_offset = 0.0;
-static Bit8u cga_comp = 0;
-static bool new_cga = 0;
+extern Bit8u cga_comp;
+extern bool new_cga;
 
 static Bit8u cga16_val = 0;
 static void update_cga16_color(void);
